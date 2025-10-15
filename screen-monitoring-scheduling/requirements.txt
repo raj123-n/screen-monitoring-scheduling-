@@ -1,0 +1,40 @@
+# System Requirements
+Node.js >= 18.0.0
+
+
+# Core Dependencies
+
+React DOM 18.3.1
+TypeScript 5.8.3
+Vite 5.4.19
+
+# UI Framework
+shadcn/ui components
+Radix UI primitives
+Tailwind CSS 3.4.17
+Lucide React icons
+
+# Form Handling
+React Hook Form 7.61.1
+Zod 3.25.76
+@hookform/resolvers 3.10.0
+
+# Routing
+React Router DOM 6.30.1
+
+# Data Visualization
+Recharts 2.15.4
+
+# State Management
+@tanstack/react-query 5.83.0
+
+# Utilities
+date-fns 3.6.0
+clsx 2.1.1
+tailwind-merge 2.6.0
+class-variance-authority 0.7.1
+
+# Development Tools
+ESLint 9.32.0
+PostCSS 8.5.6
+Autoprefixer 10.4.21
