@@ -1,9 +1,9 @@
 # System Requirements
 Node.js >= 18.0.0
-
+npm >= 8.0.0 (or yarn >= 1.22.0, or pnpm >= 7.0.0)
 
 # Core Dependencies
-
+React 18.3.1
 React DOM 18.3.1
 TypeScript 5.8.3
 Vite 5.4.19
