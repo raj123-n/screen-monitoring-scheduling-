@@ -1,9 +1,10 @@
+import { genkit } from 'genkit'
+import { googleAI } from '@genkit-ai/googleai'
+
 // Allow GEMINI_API_KEY; Genkit expects GOOGLE_GENAI_API_KEY.
 if (!process.env.GOOGLE_GENAI_API_KEY && process.env.GEMINI_API_KEY) {
   process.env.GOOGLE_GENAI_API_KEY = process.env.GEMINI_API_KEY
 }
-import { genkit } from 'genkit'
-import { googleAI } from '@genkit-ai/googleai'
 
 const ai = genkit({
   plugins: [googleAI()],
