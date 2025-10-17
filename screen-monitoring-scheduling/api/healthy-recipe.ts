@@ -7,7 +7,7 @@ import { googleAI } from '@genkit-ai/googleai'
 
 const ai = genkit({
   plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-2.5-flash',
 })
 
 function buildPrompt({ dishName, servings, location }: { dishName: string; servings: number; location?: string }) {

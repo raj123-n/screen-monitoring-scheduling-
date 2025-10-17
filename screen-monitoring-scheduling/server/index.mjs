@@ -11,7 +11,7 @@ const PORT = parseInt(process.env.RECIPE_API_PORT || '8787')
 
 const ai = genkit({
   plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-2.5-flash',
 })
 
 function buildPrompt({ dishName, servings, location }) {
@@ -65,6 +65,20 @@ const server = http.createServer(async (req, res) => {
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Allow-Methods': 'OPTIONS, POST',
     })
+    res.end()
+    return
+  }
+
+  // Friendly root message for accidental visits to the API server base URL
+  if (req.method === 'GET' && req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ message: 'Healthy Recipe API server. Use GET /api/healthy-recipe?dishName=...&servings=...&location=...' }))
+    return
+  }
+
+  // Quietly handle favicon to avoid console errors
+  if (req.method === 'GET' && req.url === '/favicon.ico') {
+    res.writeHead(204)
     res.end()
     return
   }
