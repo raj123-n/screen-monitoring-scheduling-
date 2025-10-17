@@ -64,12 +64,23 @@ export default function FoodSuggestionsPage() {
       }).toString();
       const res = await fetch(`/api/healthy-recipe?${q}`, { method: "GET" });
       if (!res.ok) {
-        throw new Error("Bad response");
+        let serverMsg = "";
+        try {
+          const maybeJson = await res.json();
+          serverMsg = (maybeJson?.error || maybeJson?.message || JSON.stringify(maybeJson));
+        } catch {
+          try { serverMsg = await res.text(); } catch {}
+        }
+        console.error("/api/healthy-recipe failed", res.status, serverMsg);
+        throw new Error(serverMsg || `HTTP ${res.status}`);
       }
       const data: HealthyRecipeResult = await res.json();
       setRecipe(data);
-    } catch (err) {
-      setError("Could not fetch recipe. Please try again.");
+    } catch (err: any) {
+      const msg = typeof err?.message === 'string' && err.message.trim().length
+        ? err.message
+        : 'Could not fetch recipe. Please try again.';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
