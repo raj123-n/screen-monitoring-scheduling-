@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import ChatbotPage from "./pages/ChatbotPage";
 import EyeCarePage from "./pages/EyeCarePage";
 import FoodSuggestionsPage from "./pages/FoodSuggestionsPage";
+import HealthyRecipePage from "./pages/HealthyRecipePage";
 import ExercisesPage from "./pages/ExercisesPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,11 @@ const App = () => (
               <Route path="/food-suggestions" element={
                 <ProtectedRoute>
                   <FoodSuggestionsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/healthy-recipe" element={
+                <ProtectedRoute>
+                  <HealthyRecipePage />
                 </ProtectedRoute>
               } />
               <Route path="/exercises" element={
