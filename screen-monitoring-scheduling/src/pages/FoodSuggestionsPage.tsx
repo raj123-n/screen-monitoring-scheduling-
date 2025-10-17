@@ -57,11 +57,12 @@ export default function FoodSuggestionsPage() {
     setError("");
     setRecipe(null);
     try {
-      const res = await fetch("/api/healthy-recipe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dishName: recipeDish, servings: recipeServings, location })
-      });
+      const q = new URLSearchParams({
+        dishName: recipeDish,
+        servings: String(recipeServings),
+        location: location || ""
+      }).toString();
+      const res = await fetch(`/api/healthy-recipe?${q}`, { method: "GET" });
       if (!res.ok) {
         throw new Error("Bad response");
       }
