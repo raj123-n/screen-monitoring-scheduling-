@@ -1,5 +1,7 @@
 'use server';
 
+import { ai } from '@/ai/genkit';
+
 export interface IngredientItem {
   name: string;
   quantity: number;
@@ -16,17 +18,83 @@ export interface HealthyRecipeResult {
 
 export async function getHealthyRecipe({
   dishName,
-  servings = 2
+  servings = 2,
+  location
 }: {
   dishName: string;
   servings?: number;
+  location?: string;
 }): Promise<HealthyRecipeResult> {
-  // Simulate AI processing delay
-  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
+  const prompt = buildPrompt({ dishName, servings, location });
 
+  try {
+    const { text } = await ai.generate(prompt);
+    const json = safeJson(text);
+    if (json && isHealthyRecipeResult(json)) {
+      // Ensure servings alignment
+      const scaled = json.servings !== servings ? { ...json, servings } : json;
+      return scaled;
+    }
+    // Fallback to simple transformation if parsing failed
+    return fallbackRecipe({ dishName, servings });
+  } catch {
+    return fallbackRecipe({ dishName, servings });
+  }
+}
+
+function capitalize(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function scale(servings: number, base: IngredientItem[]): IngredientItem[] {
+  const factor = servings / 2; // base list targets 2 servings
+  return base.map(item => ({
+    name: item.name,
+    quantity: Math.round(item.quantity * factor * 100) / 100,
+    unit: item.unit
+  }));
+}
+
+
+function buildPrompt({ dishName, servings, location }: { dishName: string; servings: number; location?: string }) {
+  const locHint = location ? `User location: ${location}. Prefer local/seasonal Indian ingredients and regional styles relevant to this location.` : `User location not provided. Prefer common Indian ingredients and widely available spices.`;
+  return `You are a nutrition-focused chef. Generate a healthy, tasty recipe with an Indian cuisine focus.
+
+Return ONLY strict JSON with this shape:
+{
+  "title": string,
+  "servings": number,
+  "ingredients": [{"name": string, "quantity": number, "unit": string}],
+  "steps": string[],
+  "nutritionTips": string[]
+}
+
+Constraints:
+- Dish name: ${dishName} (adapt if needed to an Indian-style healthy version).
+- Servings: ${servings}.
+- ${locHint}
+- Focus on home-cook friendly methods, minimal oil, low sodium, high vegetables, adequate protein.
+- Use Indian units when natural (tsp, tbsp, cup, grams), and common Indian ingredients (e.g., dals, millets, paneer, spices like turmeric, cumin, coriander, mustard seeds, curry leaves).`;
+}
+
+function safeJson(text?: string | null): any | null {
+  if (!text) return null;
+  try {
+    // Strip code fences if present
+    const cleaned = text.replace(/^```(?:json)?/i, '').replace(/```$/,'').trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return null;
+  }
+}
+
+function isHealthyRecipeResult(x: any): x is HealthyRecipeResult {
+  return x && typeof x.title === 'string' && typeof x.servings === 'number' && Array.isArray(x.ingredients) && Array.isArray(x.steps) && Array.isArray(x.nutritionTips);
+}
+
+function fallbackRecipe({ dishName, servings }: { dishName: string; servings: number }): HealthyRecipeResult {
   const normalized = dishName.trim().toLowerCase();
-
-  // Simple, healthy defaults for some common dishes
   if (normalized.includes('soup')) {
     return {
       title: `${capitalize(dishName)} (Light, High-veg)`,
@@ -57,7 +125,6 @@ export async function getHealthyRecipe({
       ]
     };
   }
-
   if (normalized.includes('bowl') || normalized.includes('salad')) {
     return {
       title: `${capitalize(dishName)} (Balanced Macro Bowl)`,
@@ -87,8 +154,6 @@ export async function getHealthyRecipe({
       ]
     };
   }
-
-  // Default healthy makeover for arbitrary dish names
   return {
     title: `${capitalize(dishName)} (Healthy Version)`,
     servings,
@@ -115,19 +180,4 @@ export async function getHealthyRecipe({
     ]
   };
 }
-
-function capitalize(s: string): string {
-  if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function scale(servings: number, base: IngredientItem[]): IngredientItem[] {
-  const factor = servings / 2; // base list targets 2 servings
-  return base.map(item => ({
-    name: item.name,
-    quantity: Math.round(item.quantity * factor * 100) / 100,
-    unit: item.unit
-  }));
-}
-
 

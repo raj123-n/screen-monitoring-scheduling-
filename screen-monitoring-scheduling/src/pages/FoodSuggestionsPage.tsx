@@ -2,13 +2,26 @@
 
 import { useState } from "react";
 import { weatherBasedFoodSuggestions } from "@/ai/flows/weather-based-food-suggestions";
-import { getHealthyRecipe, HealthyRecipeResult } from "@/ai/flows/healthy-recipe";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, CloudSun, Lightbulb } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+type IngredientItem = {
+  name: string;
+  quantity: number;
+  unit: string;
+};
+
+type HealthyRecipeResult = {
+  title: string;
+  servings: number;
+  ingredients: IngredientItem[];
+  steps: string[];
+  nutritionTips: string[];
+};
 
 export default function FoodSuggestionsPage() {
   const [location, setLocation] = useState("");
@@ -44,8 +57,16 @@ export default function FoodSuggestionsPage() {
     setError("");
     setRecipe(null);
     try {
-      const result = await getHealthyRecipe({ dishName: recipeDish, servings: recipeServings });
-      setRecipe(result);
+      const res = await fetch("/api/healthy-recipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dishName: recipeDish, servings: recipeServings, location })
+      });
+      if (!res.ok) {
+        throw new Error("Bad response");
+      }
+      const data: HealthyRecipeResult = await res.json();
+      setRecipe(data);
     } catch (err) {
       setError("Could not fetch recipe. Please try again.");
     } finally {

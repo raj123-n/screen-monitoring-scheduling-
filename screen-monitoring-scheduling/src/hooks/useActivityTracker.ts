@@ -143,13 +143,15 @@ export function useActivityTracker(options: ActivityTrackerOptions = {}) {
 
   // Click handler
   const handleClick = useCallback((event: MouseEvent) => {
-    const target = event.target as Element;
+    const t = event.target as unknown;
+    if (!(t instanceof Element)) return;
+    const target = t as Element;
     const clickEvent: ClickEvent = {
       x: event.clientX,
       y: event.clientY,
-      targetSelector: target.tagName.toLowerCase() + 
+      targetSelector: (target.tagName ? target.tagName.toLowerCase() : 'unknown') + 
         (target.id ? `#${target.id}` : '') + 
-        (target.className ? `.${target.className.split(' ').join('.')}` : ''),
+        (typeof target.className === 'string' && target.className.length ? `.${target.className.split(' ').join('.')}` : ''),
       elementId: target.id || undefined,
       button: event.button,
       modifiers: {
@@ -171,11 +173,13 @@ export function useActivityTracker(options: ActivityTrackerOptions = {}) {
 
   // Hover handlers
   const handleMouseEnter = useCallback((event: MouseEvent) => {
-    const target = event.target as Element;
+    const t = event.target as unknown;
+    if (!(t instanceof Element)) return;
+    const target = t as Element;
     const hoverEvent: HoverEvent = {
-      target: target.tagName.toLowerCase() + 
+      target: (target.tagName ? target.tagName.toLowerCase() : 'unknown') + 
         (target.id ? `#${target.id}` : '') + 
-        (target.className ? `.${target.className.split(' ').join('.')}` : ''),
+        (typeof target.className === 'string' && target.className.length ? `.${target.className.split(' ').join('.')}` : ''),
       enterTime: Date.now(),
     };
 
