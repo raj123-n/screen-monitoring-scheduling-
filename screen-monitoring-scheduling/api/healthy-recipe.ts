@@ -40,23 +40,39 @@ function safeJson(text?: string | null): any | null {
 }
 
 export default async function handler(req: any, res: any) {
+  // CORS headers for all responses
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST')
+
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-    res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST')
     res.status(204).end()
     return
   }
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' })
-    return
-  }
-
   try {
-    const { dishName, servings = 2, location } = (req.body || {}) as { dishName?: string; servings?: number; location?: string }
+    let dishName: string | undefined
+    let servings: number = 2
+    let location: string | undefined
+
+    if (req.method === 'GET') {
+      const url = new URL(req.url || '', 'https://dummy.local')
+      dishName = url.searchParams.get('dishName') || undefined
+      location = url.searchParams.get('location') || undefined
+      const s = url.searchParams.get('servings')
+      if (s) servings = Number(s) || 2
+    } else if (req.method === 'POST') {
+      const body = (req.body || {}) as { dishName?: string; servings?: number; location?: string }
+      dishName = body.dishName
+      servings = body.servings ?? 2
+      location = body.location
+    } else {
+      res.status(405).json({ error: 'Method not allowed' })
+      return
+    }
+
     if (!dishName || typeof dishName !== 'string') {
-      res.status(400).json({ error: 'dishName is required' })
+      res.status(400).json({ error: 'dishName is required', hint: 'Provide dishName in JSON (POST) or as query param (GET)' })
       return
     }
 
@@ -69,7 +85,6 @@ export default async function handler(req: any, res: any) {
     }
 
     data.servings = servings
-    res.setHeader('Access-Control-Allow-Origin', '*')
     res.status(200).json(data)
   } catch (e: any) {
     res.status(500).json({ error: 'Server error', details: e?.message || String(e) })

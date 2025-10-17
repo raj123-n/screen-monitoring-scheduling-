@@ -64,14 +64,25 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  if (req.method === 'POST' && req.url === '/api/healthy-recipe') {
+  if ((req.method === 'POST' || req.method === 'GET') && req.url && req.url.startsWith('/api/healthy-recipe')) {
     try {
-      const chunks = []
-      for await (const chunk of req) chunks.push(chunk)
-      const body = JSON.parse(Buffer.concat(chunks).toString() || '{}')
-      const { dishName, servings = 2, location } = body || {}
+      let dishName, servings = 2, location
+      if (req.method === 'GET') {
+        const u = new URL(req.url, `http://localhost:${PORT}`)
+        dishName = u.searchParams.get('dishName') || undefined
+        location = u.searchParams.get('location') || undefined
+        const s = u.searchParams.get('servings')
+        if (s) servings = Number(s) || 2
+      } else {
+        const chunks = []
+        for await (const chunk of req) chunks.push(chunk)
+        const body = JSON.parse(Buffer.concat(chunks).toString() || '{}')
+        dishName = body?.dishName
+        servings = body?.servings ?? 2
+        location = body?.location
+      }
       if (!dishName || typeof dishName !== 'string') {
-        json(res, 400, { error: 'dishName is required' })
+        json(res, 400, { error: 'dishName is required', hint: 'Provide dishName in JSON (POST) or as query param (GET)' })
         return
       }
 
@@ -91,8 +102,8 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  res.writeHead(404, { 'Content-Type': 'text/plain' })
-  res.end('Not found')
+  res.writeHead(404, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({ error: 'Not found' }))
 })
 
 server.listen(PORT, () => {
